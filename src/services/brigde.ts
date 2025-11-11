@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { encodeFunctionData } from "viem";
-import { HTTPException } from 'hono/http-exception'
 import { envConfig } from "@/env";
-import { MintRequest } from "@/schemas";
+import { MintRequest, UnlockRequest } from "@/schemas";
 import { db, bridgeJobs } from "@/db";
 import { lensPublic, lensWallet } from "@/clients/lensClient";
-import { BRIDGE_MINTER_ABI } from "@/abi";
+import { bscPublic, bscWallet } from "@/clients/bscClient";
+import { BRIDGE_MINTER_ABI, BRIDGE_GATEWAY_BSC_ABI  } from "@/abi";
 import { InternalServerError, NotFoundError, BadRequestError } from "@/lib/custorm-exceptions";
 import { BridgeJobStatus } from "@/lib/constants/bridgeJobStatus";
 
@@ -99,7 +99,79 @@ const mint = async (mintData: MintRequest) => {
     }
 };
 
+const unlock = async (unlockData: UnlockRequest) => {
+    const { toOnBsc, amount, srcTxHash, srcChainId, srcNonce } = unlockData;
+
+    let jobResult = null;
+    try {
+        const [job] = await db.insert(bridgeJobs).values({
+            direction: "LENS2BSC",
+            srcChainId: envConfig.LENS_CHAIN_ID,
+            dstChainId: envConfig.BSC_CHAIN_ID,
+            tokenAddress: envConfig.BSC_TOKEN_ADDRESS!,
+            to: toOnBsc,
+            amount: amount.toString(), // hoặc bigint column
+            srcTxHash: srcTxHash,
+            srcNonce: srcNonce,
+            status: BridgeJobStatus.PENDING,
+        }).returning();
+        jobResult = job;
+
+        const data = encodeFunctionData({
+            abi: BRIDGE_GATEWAY_BSC_ABI as any,
+            functionName: "unlock",
+            args: [
+                toOnBsc as `0x${string}`,
+                amount,
+                srcTxHash as `0x${string}`,
+                BigInt(srcChainId),
+                BigInt(srcNonce)
+            ],
+        });
+
+        const hash = await bscWallet.sendTransaction({
+            to: envConfig.BSC_POOL_ADDRESS as `0x${string}`,
+            data
+        });
+
+        await db.update(bridgeJobs).set({
+            dstTxHash: hash,
+            status: BridgeJobStatus.RELAYED
+        }).where(eq(bridgeJobs.id, job.id));
+
+        const receipt = await bscPublic.waitForTransactionReceipt({ hash });
+
+        if (receipt.status !== "success") {
+            throw new Error("Transaction failed");
+        }
+
+        await db.update(bridgeJobs).set({
+            status: BridgeJobStatus.COMPLETED,
+        }).where(eq(bridgeJobs.id, job.id));
+        return {
+            id: job.id,
+            direction: job.direction,
+            srcChainId: job.srcChainId,
+            dstChainId: job.dstChainId,
+            tokenAddress: job.tokenAddress,
+            to: job.to,
+            amount: job.amount,
+            txHash: hash
+        };
+    } catch (e: any) {
+        console.error("Error during unlocking process:", e);
+        if (jobResult) {
+            await db.update(bridgeJobs).set({
+                status: BridgeJobStatus.FAILED,
+                error: String(e?.message ?? e)
+            }).where(eq(bridgeJobs.id, jobResult.id));
+        }
+        throw new InternalServerError();
+    }
+};
+
 export default {
     getBridgeStatus,
-    mint
+    mint,
+    unlock
 };

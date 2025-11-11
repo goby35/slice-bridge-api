@@ -10,6 +10,6 @@ export const lensPublic = createPublicClient({
 
 export const lensWallet = createWalletClient({
   chain: lensTestnet,
-  account: privateKeyToAccount(envConfig.RELAYER_LENS_PK as `0x${string}`),
+  account: privateKeyToAccount(envConfig.RELAYER_PK as `0x${string}`),
   transport: http(envConfig.LENS_RPC_HTTP!)
 });

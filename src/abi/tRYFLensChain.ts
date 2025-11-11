@@ -1,141 +1,27 @@
-import type { Abi } from "viem";
+import { parseAbi } from "viem";
 
-/**
- * TRYF_Lens (wrapped) ABI Fragment
- * - Mint (chỉ MINTER_ROLE), Burn, Pause, Blacklist
- * - Role helpers: grantRole/hasRole
- * - ERC20 cơ bản: balanceOf/allowance/approve/transfer
- */
-export const TRYF_LENSCHAIN_ABI = [
-  // ===== write =====
-  {
-    type: "function",
-    name: "mint",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "burn",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "amount", type: "uint256" }],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "burnFrom",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "account", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [],
-  },
-  { type: "function", name: "pause", stateMutability: "nonpayable", inputs: [], outputs: [] },
-  { type: "function", name: "unpause", stateMutability: "nonpayable", inputs: [], outputs: [] },
+export const TRYF_LENSCHAIN_ABI = parseAbi([
+  "function mint(address to, uint256 amount) external",
+  "function burn(uint256 amount) external",
+  "function burnFrom(address account, uint256 amount) external",
+  "function pause() external",
+  "function unpause() external",
 
-  // ===== blacklist =====
-  {
-    type: "function",
-    name: "setBlacklist",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "account", type: "address" },
-      { name: "isBlacklisted", type: "bool" },
-    ],
-    outputs: [],
-  },
+  "function setBlacklist(address account, bool isBlacklisted) external",
 
-  // ===== role helpers =====
-  {
-    type: "function",
-    name: "grantRole",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "role", type: "bytes32" },
-      { name: "account", type: "address" },
-    ],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "revokeRole",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "role", type: "bytes32" },
-      { name: "account", type: "address" },
-    ],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "hasRole",
-    stateMutability: "view",
-    inputs: [
-      { name: "role", type: "bytes32" },
-      { name: "account", type: "address" },
-    ],
-    outputs: [{ name: "", type: "bool" }],
-  },
+  "function grantRole(bytes32 role, address account) external",
+  "function revokeRole(bytes32 role, address account) external",
+  "function hasRole(bytes32 role, address account) view returns (bool)",
 
-  // ===== erc20 basic =====
-  {
-    type: "function",
-    name: "balanceOf",
-    stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "allowance",
-    stateMutability: "view",
-    inputs: [
-      { name: "owner", type: "address" },
-      { name: "spender", type: "address" },
-    ],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "approve",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "spender", type: "address" },
-      { name: "value", type: "uint256" },
-    ],
-    outputs: [{ name: "", type: "bool" }],
-  },
-  {
-    type: "function",
-    name: "transfer",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "value", type: "uint256" },
-    ],
-    outputs: [{ name: "", type: "bool" }],
-  },
+  "function balanceOf(address account) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function approve(address spender, uint256 value) external returns (bool)",
+  "function transfer(address to, uint256 value) external returns (bool)",
 
-  // ===== metadata =====
-  { type: "function", name: "name", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
-  { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
-  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
-  { type: "function", name: "totalSupply", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function decimals() view returns (uint8)",
+  "function totalSupply() view returns (uint256)",
 
-  // ===== events (tiện decode) =====
-  {
-    type: "event",
-    name: "Transfer",
-    inputs: [
-      { name: "from", type: "address", indexed: true },
-      { name: "to", type: "address", indexed: true },
-      { name: "value", type: "uint256", indexed: false },
-    ],
-    anonymous: false,
-  },
-] as const satisfies Abi;
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+]);
