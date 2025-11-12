@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { encodeFunctionData } from "viem";
 import { envConfig } from "@/core/env";
-import { MintRequest, UnlockRequest } from "@/schemas";
+import { MintRequest, UnlockRequest } from "@/lib/types/requests";
 import { db, bridgeJobs } from "@/db";
 import { lensPublic, lensWallet } from "@/clients/lensClient";
 import { bscPublic, bscWallet } from "@/clients/bscClient";

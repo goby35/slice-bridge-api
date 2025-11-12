@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { MintRequestSchema, UnlockRequestSchema } from "@/schemas";
+import { MintRequestSchema, UnlockRequestSchema } from "@/lib/types/requests";
 import bridgeService from "../services/brigde";
 import { AppError } from "@/lib/custorm-exceptions";
 import { SuccessResponse } from "@/lib/custorm-response";

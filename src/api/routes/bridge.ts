@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { MintRequestSchema, UnlockRequestSchema } from "@/schemas";
+import { MintRequestSchema, UnlockRequestSchema } from "@/lib/types/requests";
 import bridgeController from "../controllers/bridge";
 
 const bridgeRoutes = new Hono();
